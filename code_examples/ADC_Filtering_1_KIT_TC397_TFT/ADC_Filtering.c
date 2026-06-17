@@ -141,6 +141,7 @@ void initEVADCModule(void)
     IfxEvadc_Adc_Config adcConf;                                        /* Define a configuration structure         */
     IfxEvadc_Adc_initModuleConfig(&adcConf, &MODULE_EVADC);             /* Fill it with default values              */
     IfxEvadc_Adc_initModule(&g_evadc, &adcConf);                        /* Apply the default configuration          */
+    /*使能EVADC模块时钟,复位模块,*/
 }
 
 /* Function to initialize the EVADC groups */
@@ -170,7 +171,7 @@ void initEVADCGroups(void)
          */
         IfxEvadc_Adc_initGroup(&g_evadcGroup[grp], &adcGroupConf);
     }
-
+    /*三个group用相同配置,之所以是三个group是因为不同引脚属于不同的ADC group.每个组启用queue0,门控设为always,不需要外部触发,一直转换 group0是主组(master),控制转换时序*/
 }
 
 /* Function to initialize the used EVADC channels */
@@ -185,8 +186,8 @@ void initEVADCChannels(void)
         IfxEvadc_Adc_initChannelConfig(&adcChannelConf, &g_evadcGroup[g_chn[chnNum].analogInput->groupId]);
 
         /* Set the channel ID and the corresponding result register */
-        adcChannelConf.channelId = g_chn[chnNum].analogInput->channelId;
-        adcChannelConf.resultRegister = g_chn[chnNum].resultRegister;
+        adcChannelConf.channelId = g_chn[chnNum].analogInput->channelId;  // 通道号
+        adcChannelConf.resultRegister = g_chn[chnNum].resultRegister;    // 结果寄存器
 
         /* Apply the channel configuration */
         IfxEvadc_Adc_initChannel(&g_evadcChannel[chnNum], &adcChannelConf);
@@ -194,6 +195,7 @@ void initEVADCChannels(void)
         /* Add channel to queue with refill option enabled */
         IfxEvadc_Adc_addToQueue(&g_evadcChannel[chnNum], IfxEvadc_RequestSource_queue0, IFXEVADC_QUEUE_REFILL);
     }
+  //找到AN0属于group0 -> 用group0 的配置, 设置通道号 = CH0. 设置结果存到寄存器RES0, 把通道加入Queue0, refill模式开启
 }
 
 /* Function to apply the filters to the EVADC channels */
