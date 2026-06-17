@@ -321,3 +321,13 @@ void initUART(void)
     /* Initialize the Standard Interface */
     IfxAsclin_Asc_stdIfDPipeInit(&g_stdInterface, &g_asc);
 }
+
+Group	TC397 有 12 个 ADC Group，每个 Group 是独立的 ADC 转换器
+Channel	每个 Group 最多 16 个通道（AN 引脚），对应物理引脚
+Queue	转换请求队列，加入的通道按顺序转换
+Refill	转换完自动重新排队，实现无限循环
+Result Register	转换结果存储的寄存器，滤波在这一层做
+DMM	Data Modification Mode，选择滤波类型
+DRCTR	Data Reduction Control，选择滤波系数
+VF	Valid Flag，=1 表示有新的有效结果
+DRC	Data Reduction Counter，=0 表示累加完成
