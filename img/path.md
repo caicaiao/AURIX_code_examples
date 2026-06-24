@@ -1,57 +1,92 @@
 学习路径->TC397
 Blinky_LED_1_KIT_TC397_TFT 熟悉 ADS/HighTec 工具链、编译下载流程、iLLD 工程结构
+
 GPIO_LED_Button_1_KIT_TC397_TFT GPIO 输入输出、按键中断，理解 Port 模块
+
 STM_Interrupt_1_KIT_TC397_TFT 系统定时器 STM + 中断机制，理解 TC3xx 中断体系（SRC/IR）是核心基础
+
 Interrupt_Prio_1_KIT_TC397_TFT 中断优先级管理，深入理解 ICU/中断路由
 
 定时器系统
 STM_System_Time_1_KIT_TC397_TFT STM 做系统时基（类似 SysTick）
+
 GPT12_Timer_Interrupt_1_KIT_TC397_TFT GPT12 通用定时器中断
+
 GPT12_Timer_Concatenation_1_KIT_TC397_TFT GPT12 级联，长周期定时
 
 通信接口
 ASCLIN_UART_1_KIT_TC397_TFT UART 串口通信，调试必备
+
 ASCLIN_Shell_UART_1_KIT_TC397_TFT Shell 命令行交互，方便后续调试
+
 UART_VCOM_1_KIT_TC397_TFT 虚拟串口（通过 DAP/调试器）
+
 UART_DMA_Transfer_1_KIT_TC397_TFT UART + DMA 传输，高效数据搬运
+
 ASCLIN_SPI_Master_1_KIT_TC397_TFT ASCLIN 模块做 SPI 主机
+
 SPI_CPU_1_KIT_TC397_TFT QSPI CPU 模式
+
 SPI_DMA_1_KIT_TC397_TFT QSPI + DMA，高速 SPI
+
 SPI_TLF_1_KIT_TC397_TFT SPI 驱动 TLF35584 电源芯片（量产项目必用）
+
 ASCLIN_LIN_Master_1_KIT_TC397_TFT LIN 主节点通信
+
 I2C_Read_Ext_Device_1_KIT_TC397_TFT I2C 读外部器件
 
 ADC模数转换
 ADC_Single_Channel_1_KIT_TC397_TFT ADC 单通道采集，先从这个开始
+
 ADC_Filtering_1_KIT_TC397_TFT ADC 硬件滤波
+
 ADC_Queued_Scan_1_KIT_TC397_TFT 队列扫描模式，多通道
+
 EDSADC_1_KIT_TC397_TFT 增强型 Delta-Sigma ADC
 
 PWM与GTM 电机电控方向重点
 GTM_TOM_PWM_1_KIT_TC397_TFT GTM TOM 输出 PWM（最常用的 PWM 方式）
+
 GTM_TOM_Interrupt_1_KIT_TC397_TFT TOM 中断
+
 GTM_ATOM_PWM_1_KIT_TC397_TFT GTM ATOM 输出 PWM（更灵活）
+
 GTM_ATOM_Interrupt_1_KIT_TC397_TFT ATOM 中断
+
 GTM_TIM_Capture_1_KIT_TC397_TFT GTM TIM 输入捕获（测频率/占空比）
+
 CCU6_PWM_Generation_1_KIT_TC397_TFT CCU6 产生 PWM（传统方式）
+
 CCU6_PWM_Capture_1_KIT_TC397_TFT CCU6 捕获
+
 CCU6_Interrupt_1_KIT_TC397_TFT CCU6 中断
+
 CCU6_ADC_1_KIT_TC397_TFT CCU6 触发 ADC 采样
+
 GPT12_PWM_Generation_1_KIT_TC397_TFT GPT12 PWM 输出
+
 GPT12_PWM_Capture_1_KIT_TC397_TFT GPT12 PWM 捕获
+
 PWM_Buzzer_1_KIT_TC397_TFT PWM 驱动蜂鸣器（轻松小项目）
 
 CAN通信
 MCMCAN_1_KIT_TC397_TFT MCMCAN 基础收发（TC3xx 用 MCMCAN，不是 MultiCAN）
+
 MCMCAN_FD_1_KIT_TC397_TFT CAN FD 通信
+
 MCMCAN_Filtering_1_KIT_TC397_TFT CAN 报文过滤/接收
 
 DMA与系统级
 DMA_Mem_to_Mem_1_KIT_TC397_TFT DMA 内存搬运基础
+
 DMA_ADC_Transfer_1_KIT_TC397_TFT DMA + ADC 自动搬运
+
 DMA_Linked_List_Mode_1_KIT_TC397_TFT DMA 链表模式
+
 Multicore_1_KIT_TC397_TFT 多核编程（TC397 有6核，车载项目必用）
+
 CCU_Clock_1_KIT_TC397_TFT 时钟系统配置
+
 Assembly_C_Code_1_KIT_TC397_TFT 内联汇编，理解 TriCore 指令集
 
 安全与系统保护
