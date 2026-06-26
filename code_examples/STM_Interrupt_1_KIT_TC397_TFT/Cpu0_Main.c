@@ -60,7 +60,7 @@ void core0_main(void)
     IfxCpu_waitEvent(&g_cpuSyncEvent, 1);
     
     initPeripherals(); /* Initialize the STM module and the LED */
-
+    /* 这是中断驱动的标志——主循环不做事，所有逻辑由硬件事件触发 */
     while(1)
     {
     }
