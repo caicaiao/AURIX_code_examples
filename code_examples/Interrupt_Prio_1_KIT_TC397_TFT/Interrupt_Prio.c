@@ -61,6 +61,13 @@ IFX_INTERRUPT(GPT12_T4_Int0_Handler, 0, ISR_PRIORITY_GPT12_T4_INT);
 void GPT12_T4_Int0_Handler(void)
 {
     IfxCpu_enableInterrupts();      /* Allows the interruptions of this function by higher prioritized interrupts   */
+进入 ISR 时 → CPU 硬件自动关闭中断（ICR.IE = 0）
+                → 默认情况下，任何其他中断都不能打断当前 ISR
+
+如果在 ISR 开头调用 IfxCpu_enableInterrupts()
+                → 重新开启中断（ICR.IE = 1）
+                → 此时更高优先级的中断可以抢占当前 ISR
+
     IfxPort_setPinLow(LED_D110);    /* LED on                                                                       */
 
     /* Wait 600ms
@@ -123,6 +130,7 @@ void init_GPT12_module(void)
     IfxGpt12_enableModule(&MODULE_GPT120);
     /* Select 32 as prescaler for the GPT1 module -> slowest clock frequency */
     IfxGpt12_setGpt1BlockPrescaler(&MODULE_GPT120, IfxGpt12_Gpt1BlockPrescaler_32);
+    //   fGPT1 = fSPB / 32 = 100MHz / 32 = 3.125MHz
 
     /* Set timers T2, T3 and T4 in timer mode */
     IfxGpt12_T2_setMode(&MODULE_GPT120, IfxGpt12_Mode_timer);
@@ -132,7 +140,9 @@ void init_GPT12_module(void)
     IfxGpt12_T2_setTimerPrescaler(&MODULE_GPT120, IfxGpt12_TimerInputPrescaler_128);
     IfxGpt12_T3_setTimerPrescaler(&MODULE_GPT120, IfxGpt12_TimerInputPrescaler_128);
     IfxGpt12_T4_setTimerPrescaler(&MODULE_GPT120, IfxGpt12_TimerInputPrescaler_128);
-
+    //   fTx = 3.125MHz / 128 = 24,414 Hz
+    //   16位定时器溢出周期 = 65536 / 24414 ≈ 2.68 秒
+    
     /* Service request configuration */
     /* Get source pointer of timer T2, initialize and enable */
     volatile Ifx_SRC_SRCR *src = IfxGpt12_T2_getSrc(&MODULE_GPT120);
@@ -168,3 +178,15 @@ void wait_ms(uint32 ms)
 
     wait(waitms);
 }
+
+  31        16 15    10  9   8   7      0
+ ┌───────────┬────────┬───┬───┬──────────┐
+ │  reserved │  SRPN  │TOS│SRE│ 状态位    │
+ │           │优先级号 │目标│使能│SRR/CLRR  │
+ └───────────┴────────┴───┴───┴──────────┘
+
+ SRPN (Service Request Priority Number): 1~255, 数字越大优先级越高
+ TOS  (Type of Service):  0=CPU0, 1=CPU1, ..., 6=DMA
+ SRE  (Service Request Enable): 1=使能, 0=禁止
+ SRR  (Service Request Set): 硬件/软件置位请求标志
+ CLRR (Request Clear): 写1清除请求标志
