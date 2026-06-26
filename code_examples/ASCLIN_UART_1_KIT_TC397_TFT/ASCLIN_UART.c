@@ -79,6 +79,7 @@ void asclin1RxISR(void)
 {
     IfxAsclin_Asc_isrReceive(&g_ascHandle);
 }
+我们不需要自己写 ISR 内部逻辑！iLLD 的 isrTransmit 和 isrReceive 已经处理了所有 FIFO 搬运工作。我们只需要在 ISR 入口调用它即可
 
 /* This function initializes the ASCLIN UART module */
 void init_ASCLIN_UART(void)
@@ -93,7 +94,7 @@ void init_ASCLIN_UART(void)
     /* ISR priorities and interrupt target */
     ascConfig.interrupt.txPriority = INTPRIO_ASCLIN1_TX;
     ascConfig.interrupt.rxPriority = INTPRIO_ASCLIN1_RX;
-    ascConfig.interrupt.typeOfService = IfxCpu_Irq_getTos(IfxCpu_getCoreIndex());
+    ascConfig.interrupt.typeOfService = IfxCpu_Irq_getTos(IfxCpu_getCoreIndex());自动获取当前核的 TOS
 
     /* FIFO configuration */
     ascConfig.txBuffer = &g_ascTxBuffer;
@@ -108,7 +109,7 @@ void init_ASCLIN_UART(void)
         &UART_PIN_RX,   IfxPort_InputMode_pullUp,     /* RX pin           */
         NULL_PTR,       IfxPort_OutputMode_pushPull,  /* RTS pin not used */
         &UART_PIN_TX,   IfxPort_OutputMode_pushPull,  /* TX pin           */
-        IfxPort_PadDriver_cmosAutomotiveSpeed1
+        IfxPort_PadDriver_cmosAutomotiveSpeed1    // 驱动强度
     };
     ascConfig.pins = &pins;
 
@@ -121,3 +122,7 @@ void send_receive_ASCLIN_UART_message(void)
     IfxAsclin_Asc_write(&g_ascHandle, g_txData, &g_count, TIME_INFINITE);   /* Transmit data via TX */
     IfxAsclin_Asc_read(&g_ascHandle, g_rxData, &g_count, TIME_INFINITE);    /* Receive data via RX  */
 }
+数据的收发需要三级缓冲
+第一级 硬件 TXFIFO/RXFIFO 16Byte 由ASCLIN 硬件负责 为了减少中断频率
+第二级 软件 FIFO (g_ascTxBuffer) 64 字节 由iLLD ISR负责 缓冲用户数据，解耦收发速度差
+第三级 用户数据 (g_txData) 任意 由用户代码负责 业务逻辑的数据
