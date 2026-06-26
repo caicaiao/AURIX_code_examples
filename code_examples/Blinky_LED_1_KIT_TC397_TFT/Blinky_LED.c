@@ -36,6 +36,14 @@
 /*********************************************************************************************************************/
 #define LED_D107    &MODULE_P13,0                                           /* LED D107: Port, Pin definition       */
 #define WAIT_TIME   500                                                     /* Wait time constant in milliseconds   */
+/*
+P13.0 的含义:
+  P   = Port（端口）
+  13  = 端口号（TC397 有 P00~P40 共几十个端口组）
+  0   = 引脚号（每组最多 16 个引脚）
+
+&MODULE_P13 = 端口13的寄存器基地址（iLLD 宏定义）
+*/
 
 /*********************************************************************************************************************/
 /*---------------------------------------------Function Implementations----------------------------------------------*/
@@ -45,7 +53,26 @@ void initLED(void)
 {
     /* Initialization of the LED used in this example */
     IfxPort_setPinModeOutput(LED_D107, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);
+/*
+IOCR (Input/Output Control Register)
+  ├── 方向: 输入 / 输出
+  ├── 输出模式: 推挽(Push-Pull) / 开漏(Open-Drain)
+  └── 输入模式: 无上下拉 / 上拉 / 下拉
 
+OMR (Output Modification Register)  → 置位/清零/翻转
+OUT (Output Register)               → 读当前输出状态
+IN  (Input Register)                → 读引脚电平
+
+推挽 → LED驱动、SPI的SCK/MOSI、普通GPIO控制、PWM输出
+       （大部分场景用推挽就行）
+
+开漏 → I2C总线（SDA/SCL 必须开漏）
+       多设备共享中断线（多个芯片的INT引脚并联）
+       需要电平转换（3.3V MCU 驱动 5V 器件）
+       CAN TX 引脚（CAN收发器通常要求开漏）
+
+无上下拉 -> ADC模拟输入、外部已有确定电平的信号
+*/
     /* Switch OFF the LED (low-level active) */
     IfxPort_setPinHigh(LED_D107);
 }
@@ -55,4 +82,19 @@ void blinkLED(void)
 {
     IfxPort_togglePin(LED_D107);                                                /* Toggle the state of the LED      */
     waitTime(IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, WAIT_TIME));    /* Wait 500 milliseconds            */
+    
+    /*
+    BSP_DEFAULT_TIMER ->STM0
+    默认 STM0 是因为代码跑在 CPU0 上，读自己核的 STM 最快
+    
+    STM 特点:
+  - 64位自由运行计数器，永不溢出（几百年才溢出一次）
+  - TC397 有 6 个 STM（STM0~STM5），每核一个
+  - 时钟源 = fSPB (System Peripheral Bus)，通常 100MHz
+  
+    waitTime() 原理:
+      记录当前 STM 值 → 不断读 STM → 差值 >= 目标 tick 就退出
+  （纯阻塞轮询，不是中断方式）
+
+    */
 }
