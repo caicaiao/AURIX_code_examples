@@ -59,6 +59,27 @@ void init_GPIOs(void)
      */
     IfxPort_setPinState(GROUND, IfxPort_State_low);
     IfxPort_setPinMode(GROUND, IfxPort_Mode_outputPushPullGeneral);
+    /*
+     IfxPort_setPinModeOutput(LED, IfxPort_OutputMode_pushPull, IfxPort_OutputIdx_general);等价于
+     IfxPort_setPinMode(LED, IfxPort_Mode_outputPushPullGeneral);
+    // 输入模式
+    IfxPort_Mode_inputNoPullDevice     = 0x00   // 浮空输入
+    IfxPort_Mode_inputPullDown         = 0x08   // 下拉输入
+    IfxPort_Mode_inputPullUp           = 0x10   // 上拉输入
+
+    // 推挽输出 (Push-Pull)
+    IfxPort_Mode_outputPushPullGeneral = 0x80   // 通用推挽 (GPIO)
+    IfxPort_Mode_outputPushPullAlt1    = 0x88   // 复用功能1 (如 UART_TX)
+    IfxPort_Mode_outputPushPullAlt2    = 0x90   // 复用功能2 (如 SPI_CLK)
+    IfxPort_Mode_outputPushPullAlt3    = 0x98   // 复用功能3
+    ...Alt4 ~ Alt7                              // 复用功能4~7
+
+    // 开漏输出 (Open-Drain)
+    IfxPort_Mode_outputOpenDrainGeneral = 0xC0  // 通用开漏
+    IfxPort_Mode_outputOpenDrainAlt1    = 0xC8  // 复用开漏1 (如 I2C_SDA)
+    ...Alt2 ~ Alt7                              // 复用开漏2~7
+    每个引脚可以连接到不同的外设（UART/SPI/CAN/GTM...），具体哪个 Alt 对应哪个外设，需要查 数据手册的引脚复用表
+    */
 }
 
 /* Depending on the the state of the "BUTTON" port pin, the LED is turned on or off */
