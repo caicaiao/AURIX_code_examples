@@ -48,6 +48,7 @@ void core0_main(void)
     
     /* !!WATCHDOG0 AND SAFETY WATCHDOG ARE DISABLED HERE!!
      * Enable the watchdogs and service them periodically if it is required
+     TC397 有 2 层看门狗：CPU 看门狗（每核一个）+ Safety 看门狗。关看门狗需要先取密码再关闭，这是 AURIX 安全机制
      */
     IfxScuWdt_disableCpuWatchdog(IfxScuWdt_getCpuWatchdogPassword());
     IfxScuWdt_disableSafetyWatchdog(IfxScuWdt_getSafetyWatchdogPassword());
