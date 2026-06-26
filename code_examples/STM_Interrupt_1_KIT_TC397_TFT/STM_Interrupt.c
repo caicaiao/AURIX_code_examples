@@ -38,6 +38,14 @@
 /*********************************************************************************************************************/
 #define ISR_PRIORITY_STM        40                              /* Priority for interrupt ISR                       */
 #define TIMER_INT_TIME          500                             /* Time between interrupts in ms                    */
+优先级范围        建议用途                           示例
+─────────────────────────────────────────────────────────
+200~255          安全关键 / 紧急中断               SMU报警, 看门狗, 紧急停止
+150~199          实时性要求极高                     电机FOC控制中断, PWM
+100~149          通信中断                          CAN RX/TX, UART, SPI
+50~99            定时任务                          STM周期中断, ADC完成
+1~49             低优先级                          按键, 状态指示, 日志
+0                禁止中断                          (不使用)
 
 #define LED                     &MODULE_P13,0                   /* LED toggled in Interrupt Service Routine (ISR)   */
 #define STM                     &MODULE_STM0                    /* STM0 is used in this example                     */
@@ -74,6 +82,20 @@ void isrSTM(void)
 {
     /* Update the compare register value that will trigger the next interrupt and toggle the LED */
     IfxStm_increaseCompare(STM, g_STMConf.comparator, g_ticksFor500ms);
+    方案A (错误): 每次中断里重置计数器 = 0
+  STM:  0 ──→ 50000000 → 中断 → 重置为0 → 0 ──→ 50000000 → ...
+  问题: 从比较匹配到进入ISR有延迟(假设100个tick)，
+        重置后这100个tick的误差就丢了，时间会越来越不准
+
+方案B (正确): 增加比较值 (本例程用的方式)
+  比较值:    50000000 → 100000000 → 150000000 → 200000000 → ...
+  STM:  0 ────→ 50000000 ────→ 100000000 ────→ 150000000 → ...
+                    │                │                │
+                  中断             中断             中断
+  优点: 无论ISR响应延迟多少，下次触发时刻永远精确
+        → 累积误差为零！
+
+STM 是 64 位自由运行 计数器，没有 reset 功能
     IfxPort_setPinState(LED, IfxPort_State_toggled);
 }
 
@@ -100,8 +122,45 @@ void initSTM(void)
 void initPeripherals(void)
 {
     /* Initialize time constant */
+    // 计算 500ms = 多少个 STM tick
+    // fSTM = 100MHz → 1 tick = 10ns → 500ms = 50,000,000 ticks
     g_ticksFor500ms = IfxStm_getTicksFromMilliseconds(BSP_DEFAULT_TIMER, TIMER_INT_TIME);
     
     initLED();                                      /* Initialize the port pin to which the LED is connected        */
     initSTM();                                      /* Configure the STM module                                     */
 }
+
+时间线 ──────────────────────────────────────────────→
+
+STM0 计数器:  0 ─────────────→ 50000000 (=500ms)
+                                    │
+                              比较匹配！
+                                    │
+                                    ▼
+              ┌──────────────────────────────────┐
+              │         SRC 寄存器 (STM0)          │
+              │  SRPN = 40 (优先级)                │
+              │  TOS  = CPU0 (目标处理核)           │
+              │  SRE  = 1 (使能)                   │
+              │  SRR ← 1 (硬件置位请求标志)         │
+              └──────────────────────────────────┘
+                                    │
+                                    ▼
+              ┌──────────────────────────────────┐
+              │       CPU0 的 ICU (中断控制单元)    │
+              │  当前执行优先级 < 40?               │
+              │  ├── YES → 抢占，跳转到 ISR        │
+              │  └── NO  → 挂起，等当前中断结束     │
+              └──────────────────────────────────┘
+                                    │
+                                    ▼
+              ┌──────────────────────────────────┐
+              │      isrSTM() 执行                 │
+              │  ① increaseCompare(+50000000)     │
+              │     → 比较值变成 100000000         │
+              │     → 下次在 1000ms 时刻再触发     │
+              │  ② togglePin(LED)                 │
+              │  ③ 自动返回 (RETI)                 │
+              └──────────────────────────────────┘
+                                    │
+              STM 继续计数 ──→ 100000000 → 又触发 → ...
