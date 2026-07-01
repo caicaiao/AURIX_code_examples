@@ -116,9 +116,16 @@ void initEVADCGroup(void)
 
     /* Enable all gates in "always" mode (no edge detection) */
     adcGroupConfig.queueRequest[0].triggerConfig.gatingMode = IfxEvadc_GatingMode_always;
+  always          → 随时可以触发（本例程）
+  gateHigh        → 只在门控信号为高时允许
+  gateLow         → 只在门控信号为低时允许
+  risingEdge      → 门控信号上升沿时允许一次
 
     /* Initialize the group */
     IfxEvadc_Adc_initGroup(&g_adcGroup, &adcGroupConfig);
+   每个 Group 是一个独立的 12-bit SAR ADC！可以同时并行转换！ADC模块包含group,group包含多个channel
+   每个group有三个转换请求源,queue(自动扫描一组预设通道),scan(自动扫描一组预设通道),background(全局后台扫描，优先级最低，利用空闲时间转换)
+   每个group有16个结果寄存器,一般情况跟每个channel对应
 }
 
 /* Function to initialize the EVADC channel */
@@ -142,7 +149,8 @@ void initEVADCChannels(void)
 void fillAndStartQueue(void)
 {
     /* Add channel to queue with refill option enabled */
-    IfxEvadc_Adc_addToQueue(&g_adcChannel, IfxEvadc_RequestSource_queue0, IFXEVADC_QUEUE_REFILL);
+    IfxEvadc_Adc_addToQueue(&g_adcChannel, IfxEvadc_RequestSource_queue0, IFXEVADC_QUEUE_REFILL);循环转换
+ REFILL
 
     /* Start the queue */
     IfxEvadc_Adc_startQueue(&g_adcGroup, IfxEvadc_RequestSource_queue0);
@@ -158,6 +166,19 @@ void readEVADC(void)
     {
         conversionResult = IfxEvadc_Adc_getResult(&g_adcChannel); /* Read the result of the channel */
     } while(!conversionResult.B.VF);
+ 结果寄存器结构
+  31    20 19  16 15          4  3    0
+ ┌────────┬──────┬──────────────┬──────┐
+ │  VF/   │      │   RESULT     │      │
+ │  标志位 │ 保留 │  12-bit 结果  │ 保留 │
+ └────────┴──────┴──────────────┴──────┘
+
+ VF (Valid Flag):  1 = 结果有效(新转换完成), 0 = 无效/已读取
+ RESULT:           12-bit ADC 值 (0x000 ~ 0xFFF = 0 ~ 4095)
+
+ 代码中:
+   conversionResult.B.VF     → 取 VF 位
+   conversionResult.B.RESULT → 取 12-bit 结果
 
     /* Store result */
     g_result = conversionResult;
